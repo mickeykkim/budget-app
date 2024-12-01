@@ -1,0 +1,32 @@
+{
+    "family": "budget-app",
+    "containerDefinitions": [
+        {
+        "name": "budget-app",
+        "image": "${aws_account_id}.dkr.ecr.${region}.amazonaws.com/budget-app:latest",
+        "cpu": 256,
+        "memory": 512,
+        "essential": true,
+        "portMappings": [
+            {
+            "containerPort": 8000,
+            "protocol": "tcp"
+            }
+        ],
+        "environment": [
+            {
+            "name": "ENVIRONMENT",
+            "value": "production"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+            "awslogs-group": "/ecs/budget-app",
+            "awslogs-region": "eu-west-2",
+            "awslogs-stream-prefix": "ecs"
+            }
+        }
+        }
+    ]
+}
