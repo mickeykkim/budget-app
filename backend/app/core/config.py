@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
     AWS_REGION: str = "eu-west-2"
-    AWS_ENDPOINT_URL: Optional[str] = None  # For LocalStack
+    AWS_ENDPOINT_URL: Optional[str] = None
 
     # Monzo Settings
     MONZO_CLIENT_ID: Optional[str] = None

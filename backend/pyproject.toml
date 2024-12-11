@@ -89,7 +89,8 @@ plugins = [
 ]
 exclude = [
     "tests/",
-    "alembic/"
+    "alembic/",
+    "init-db.py"
 ]
 
 [[tool.mypy.overrides]]

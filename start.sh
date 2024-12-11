@@ -17,6 +17,6 @@ done
 
 echo "Initializing LocalStack resources..."
 docker-compose exec localstack bash /localstack/init-aws.sh
-docker-compose exec backend bash init-db.sh
+docker-compose exec backend python init-db.py
 
 echo "Setup complete! Your development environment is ready."
