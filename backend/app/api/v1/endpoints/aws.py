@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.core.config import get_settings
 
-settings = get_settings()
+SETTINGS = get_settings()
 router = APIRouter()
 
 
@@ -15,7 +15,7 @@ async def get_localstack_health() -> Any:
     """Get LocalStack health status through backend proxy"""
     try:
         response = requests.get(
-            f"{settings.AWS_ENDPOINT_URL}/_localstack/health", timeout=5  # Add timeout
+            f"{SETTINGS.AWS_ENDPOINT_URL}/_localstack/health", timeout=5  # Add timeout
         )
         response.raise_for_status()  # Raise exception for non-200 status codes
         return response.json()

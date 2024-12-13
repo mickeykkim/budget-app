@@ -1,3 +1,7 @@
+"""
+Service for Transaction model
+"""
+
 from typing import Optional
 from uuid import UUID
 
@@ -10,6 +14,8 @@ from app.schemas.transaction import TransactionCreate, TransactionUpdate
 
 
 class TransactionService:
+    """Service for Transaction model"""
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -20,7 +26,8 @@ class TransactionService:
             .filter(
                 BankAccount.id == bank_account_id,
                 BankAccount.user_id == user_id,
-                BankAccount.is_active == True,  # noqa: E712
+                BankAccount.is_active  # noqa: E712  # pylint: disable=singleton-comparison
+                == True,
             )
             .first()
         )
@@ -71,7 +78,9 @@ class TransactionService:
 
         # Count total matching transactions
         count_query = (
-            select(func.count()).select_from(Transaction).where(and_(*conditions))
+            select(func.count())  # pylint: disable=not-callable
+            .select_from(Transaction)
+            .where(and_(*conditions))
         )
         total = self.db.scalar(count_query) or 0
 

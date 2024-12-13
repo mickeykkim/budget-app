@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -128,7 +128,7 @@ def test_get_transactions_success(
     mocker.patch("requests.request", return_value=mock_response)
 
     transactions = monzo_api.get_transactions(
-        "test_access_token", "acc_123", since=datetime.utcnow() - timedelta(days=7)
+        "test_access_token", "acc_123", since=datetime.now(UTC) - timedelta(days=7)
     )
 
     assert len(transactions) == 1

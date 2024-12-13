@@ -1,3 +1,7 @@
+"""
+Config for AWS services
+"""
+
 from typing import Any
 
 import boto3
@@ -7,6 +11,7 @@ from app.core.config import Settings, get_settings
 
 
 class AWSConfig:
+    """Config for AWS services"""
     def __init__(self, settings: Settings | None = None):
         if not settings:
             settings = get_settings()

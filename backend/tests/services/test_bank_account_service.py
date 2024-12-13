@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -17,7 +17,7 @@ def test_create_bank_account(db: Session, test_user):
         account_identifier="5678",
         access_token="access_123",
         refresh_token="refresh_123",
-        token_expires_at=datetime.utcnow() + timedelta(hours=1),
+        token_expires_at=datetime.now(UTC) + timedelta(hours=1),
     )
 
     account = service.create(test_user.id, account_data)
@@ -50,7 +50,7 @@ def test_get_multi_bank_accounts(db: Session, test_user, test_bank_account):
         account_identifier="9012",
         access_token="access_456",
         refresh_token="refresh_456",
-        token_expires_at=datetime.utcnow() + timedelta(hours=1),
+        token_expires_at=datetime.now(UTC) + timedelta(hours=1),
     )
     service.create(test_user.id, account_data)
 
@@ -71,7 +71,7 @@ def test_get_multi_bank_accounts_pagination(db: Session, test_user, test_bank_ac
             account_identifier=str(i),
             access_token=f"access_{i}",
             refresh_token=f"refresh_{i}",
-            token_expires_at=datetime.utcnow() + timedelta(hours=1),
+            token_expires_at=datetime.now(UTC) + timedelta(hours=1),
         )
         service.create(test_user.id, account_data)
 
@@ -98,14 +98,34 @@ def test_update_bank_account(db: Session, test_user, test_bank_account):
     assert updated_account.access_token == "new_access_token"
 
 
-def test_delete_bank_account(db: Session, test_user, test_bank_account):
+def test_deactivate_bank_account(db: Session, test_user, test_bank_account):
     service = BankAccountService(db)
-    assert service.delete(test_user.id, test_bank_account.id) is True
+    assert service.deactivate(test_user.id, test_bank_account.id) is True
 
     # Verify account is marked as inactive
     account = service.get_by_id(test_user.id, test_bank_account.id)
     assert account is not None
     assert account.is_active is False
+
+
+def test_delete_bank_account(db: Session, test_user):
+    # Create another bank account
+    service = BankAccountService(db)
+    account_data = BankAccountCreate(
+        account_type="truelayer",
+        account_name="My Savings",
+        account_identifier="9012",
+        access_token="access_456",
+        refresh_token="refresh_456",
+        token_expires_at=datetime.now(UTC) + timedelta(hours=1),
+    )
+    test_account = service.create(test_user.id, account_data)
+
+    assert service.delete(test_user.id, test_account.id) is True
+
+    # Verify account does not exist
+    account = service.get_by_id(test_user.id, test_account.id)
+    assert account is None
 
 
 def test_refresh_token_success(db: Session, test_bank_account, mock_bank_api, mocker):

@@ -7,7 +7,7 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeEngine
 
 
-class SQLiteUUID(TypeDecorator[UUID]):
+class SQLiteUUID(TypeDecorator[UUID]):  # pylint: disable=too-many-ancestors
     """Platform-independent UUID type.
     Uses PostgreSQL's UUID type, if available, otherwise uses String(32)
     """
@@ -18,8 +18,7 @@ class SQLiteUUID(TypeDecorator[UUID]):
     def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
         if dialect.name == "postgresql":
             return dialect.type_descriptor(PgUUID())
-        else:
-            return dialect.type_descriptor(String(32))
+        return dialect.type_descriptor(String(32))
 
     def process_bind_param(
         self, value: Union[str, UUID, None], dialect: Dialect
@@ -44,3 +43,10 @@ class SQLiteUUID(TypeDecorator[UUID]):
             return UUID(str(value))
         except (TypeError, ValueError):
             return None
+
+    def process_literal_param(self, value: Union[UUID, None], dialect: Dialect) -> str:
+        return super().process_literal_param(value, dialect)
+
+    @property
+    def python_type(self) -> type:
+        return super().python_type

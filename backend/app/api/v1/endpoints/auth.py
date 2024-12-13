@@ -12,7 +12,7 @@ from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserInDB
 from app.services.user_service import UserService
 
-settings = get_settings()
+SETTINGS = get_settings()
 router = APIRouter()
 
 
@@ -44,7 +44,7 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=SETTINGS.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )

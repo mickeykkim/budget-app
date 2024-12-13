@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from fastapi import status
@@ -11,7 +11,7 @@ def test_create_bank_account(client, user_token_headers):
         "account_identifier": "1234",
         "access_token": "test_access_token",
         "refresh_token": "test_refresh_token",
-        "token_expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
+        "token_expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
     }
 
     response = client.post(
@@ -51,7 +51,7 @@ def test_list_bank_accounts_pagination(
             account_identifier=str(i),
             access_token=f"access_{i}",
             refresh_token=f"refresh_{i}",
-            token_expires_at=datetime.utcnow() + timedelta(hours=1),
+            token_expires_at=datetime.now(UTC) + timedelta(hours=1),
             is_active=True,
         )
         db.add(account)

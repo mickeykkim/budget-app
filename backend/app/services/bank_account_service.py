@@ -1,3 +1,7 @@
+"""
+Service for BankAccount model
+"""
+
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
@@ -7,6 +11,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
+from app.core.logging import logger
 from app.models.domain.models import BankAccount, Transaction
 from app.schemas.bank_account import BankAccountCreate, BankAccountUpdate
 from app.services.bank_api import TokenRefreshError
@@ -15,6 +20,8 @@ from app.services.bank_api.monzo import MonzoAPI
 
 
 class BankAccountService:
+    """Service for BankAccount model"""
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -58,11 +65,16 @@ class BankAccountService:
         conditions = [BankAccount.user_id == user_id]
 
         if not include_inactive:
-            conditions.append(BankAccount.is_active == True)  # noqa: E712
+            conditions.append(
+                BankAccount.is_active  # noqa: E712  # pylint: disable=singleton-comparison
+                == True
+            )
 
         # Count total matching accounts
         count_query = (
-            select(func.count()).select_from(BankAccount).where(and_(*conditions))
+            select(func.count())  # pylint: disable=not-callable
+            .select_from(BankAccount)
+            .where(and_(*conditions))
         )
         total = self.db.scalar(count_query) or 0
 
@@ -98,6 +110,22 @@ class BankAccountService:
         return bank_account
 
     def delete(self, user_id: UUID, bank_account_id: UUID) -> bool:
+        """Hard delete a bank account."""
+        bank_account = self.get_by_id(user_id, bank_account_id)
+        if not bank_account:
+            return False
+
+        # Remove associated transactions first
+        self.db.query(Transaction).filter(
+            Transaction.bank_account_id == bank_account_id
+        ).delete()
+
+        # Delete the bank account
+        self.db.delete(bank_account)
+        self.db.commit()
+        return True
+
+    def deactivate(self, user_id: UUID, bank_account_id: UUID) -> bool:
         """Soft delete a bank account by setting is_active to False."""
         bank_account = self.get_by_id(user_id, bank_account_id)
         if not bank_account:
@@ -135,8 +163,9 @@ class BankAccountService:
             self.db.refresh(bank_account)
             return bank_account
 
-        except TokenRefreshError:
+        except TokenRefreshError as e:
             # Re-raise the exception to be handled by the caller
+            logger.error(f"Token refresh error: {e}")
             raise
 
     def sync_monzo_transactions(self, user_id: UUID, bank_account_id: UUID) -> int:

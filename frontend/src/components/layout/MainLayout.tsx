@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Home, CreditCard, PieChart, Settings, LogOut } from 'lucide-react';
+import { Home, CreditCard, PieChart, Settings, LogOut, ListIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const MainLayout = () => {
@@ -59,6 +59,17 @@ const MainLayout = () => {
             >
               <CreditCard className="mr-3 h-5 w-5 text-gray-500" />
               Accounts
+            </Link>
+            <Link
+              to="/transactions"
+              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                isActive('/transactions')
+                  ? 'text-gray-900 bg-gray-100'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <ListIcon className="mr-3 h-5 w-5 text-gray-500" />
+              Transactions
             </Link>
             <Link
               to="/analytics"

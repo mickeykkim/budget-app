@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -109,7 +109,7 @@ def test_bank_account(db: Session, test_user) -> BankAccount:
         account_identifier="1234",
         access_token="test_access_token",
         refresh_token="test_refresh_token",
-        token_expires_at=datetime.utcnow() + timedelta(hours=1),
+        token_expires_at=datetime.now(UTC) + timedelta(hours=1),
         is_active=True,
     )
     db.add(bank_account)
@@ -132,7 +132,7 @@ def mock_bank_api(mocker):
     mock_api.refresh_token.return_value = {
         "access_token": "new_access_token",
         "refresh_token": "new_refresh_token",
-        "expires_at": datetime.utcnow() + timedelta(days=30),
+        "expires_at": datetime.now(UTC) + timedelta(days=30),
     }
     return mock_api
 
@@ -143,7 +143,7 @@ def mock_monzo_api(mocker):
     mock_api.exchange_code.return_value = {
         "access_token": "test_access_token",
         "refresh_token": "test_refresh_token",
-        "expires_at": datetime.utcnow() + timedelta(hours=1),
+        "expires_at": datetime.now(UTC) + timedelta(hours=1),
     }
     mock_api.get_accounts.return_value = [
         {

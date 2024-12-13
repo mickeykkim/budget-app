@@ -1,3 +1,9 @@
+"""
+Service for DB reset endpoint
+"""
+
+from typing import Any
+
 from sqlalchemy import MetaData, text
 from sqlalchemy.orm import Session
 
@@ -5,6 +11,8 @@ from app.core.config import Settings, get_settings
 
 
 class DBResetService:
+    """Service for DB reset endpoint"""
+
     def __init__(self, db: Session, settings: Settings | None = None):
         self.db = db
         self.settings = settings or get_settings()
@@ -54,7 +62,7 @@ class DBResetService:
             self.db.commit()
             return True
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self._safe_rollback()
             raise RuntimeError(f"Failed to reset database: {str(e)}") from e
 
@@ -62,11 +70,11 @@ class DBResetService:
         """Safely rollback the transaction and reset session state."""
         try:
             self.db.rollback()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             # If rollback fails, close and dispose the session
             self.db.close()
 
-    def _reset_sqlite(self, tables) -> None:
+    def _reset_sqlite(self, tables: list[Any]) -> None:
         """Reset a SQLite database while preserving specified tables."""
         try:
             # Disable foreign key checks
@@ -80,7 +88,7 @@ class DBResetService:
                     self.db.execute(
                         text(f"DELETE FROM sqlite_sequence WHERE name='{table.name}'")
                     )
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     # sqlite_sequence might not exist if no autoincrement fields
                     pass
 
@@ -88,11 +96,11 @@ class DBResetService:
             # Re-enable foreign key checks
             try:
                 self.db.execute(text("PRAGMA foreign_keys = ON"))
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 self._safe_rollback()
                 raise
 
-    def _reset_postgres(self, tables) -> None:
+    def _reset_postgres(self, tables: list[Any]) -> None:
         """Reset a PostgreSQL database while preserving specified tables."""
         try:
             # Start a new transaction
@@ -114,7 +122,7 @@ class DBResetService:
                     self.db.execute(
                         text(f"ALTER SEQUENCE {sequence_name} RESTART WITH 1")
                     )
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     # Sequence might not exist, which is fine
                     pass
 
@@ -124,12 +132,12 @@ class DBResetService:
             # Commit the transaction
             self.db.commit()
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             # If anything fails, try to clean up
             try:
                 # Try to reset session_replication_role even if other commands failed
                 self.db.execute(text("SET session_replication_role = DEFAULT"))
                 self._safe_rollback()
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 self._safe_rollback()
             raise RuntimeError(f"PostgreSQL reset failed: {str(e)}") from e

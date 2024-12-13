@@ -76,7 +76,10 @@ def test_reset_database_production(db: Session):
 
 
 def test_reset_database_with_foreign_keys(db: Session, development_settings: Settings):
-    """Test database reset properly handles foreign key relationships while preserving users"""
+    """
+    Test database reset properly handles foreign key relationships while preserving
+    users
+    """
     # Create data with foreign key relationships
     user_service = UserService(db)
     user = user_service.create(UserCreate(email="test@example.com", password="test123"))

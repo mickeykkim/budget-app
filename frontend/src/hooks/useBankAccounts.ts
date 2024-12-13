@@ -1,58 +1,64 @@
-// src/hooks/useBankAccounts.ts
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api/client';
-import type { BankAccount } from '@/types';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+import type { BankAccount, PaginatedResponse, CreateBankAccountData } from '@/types';
 
 export function useBankAccounts() {
-  const queryClient = useQueryClient();
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
-  const accountsQuery = useQuery({
-    queryKey: ['bankAccounts'],
-    queryFn: async () => {
-      const response = await api.getBankAccounts();
-      return response.data;
-    },
-  });
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await api.get<PaginatedResponse<BankAccount>>('/bank-accounts');
+        setAccounts(response.items);
+        setLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch accounts'));
+        setLoading(false);
+      }
+    };
 
-  const addAccountMutation = useMutation({
-    mutationFn: async (accountData: Partial<BankAccount>) => {
-      const response = await api.createBankAccount(accountData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bankAccounts'] });
-    },
-  });
+    fetchAccounts();
+  }, []);
 
-  const removeAccountMutation = useMutation({
-    mutationFn: async (accountId: string) => {
-      await api.deleteBankAccount(accountId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bankAccounts'] });
-    },
-  });
+  const createAccount = async (data: CreateBankAccountData) => {
+    setIsCreating(true);
+    try {
+      const response = await api.post<BankAccount>('/bank-accounts', data);
+      setAccounts(prev => [...prev, response]);
+      return response;
+    } catch (err) {
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'Failed to create account';
+      setError(new Error(errorMessage));
+      throw err;
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-  const updateAccountMutation = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<BankAccount> & { id: string }) => {
-      const response = await api.updateBankAccount(id, data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bankAccounts'] });
-    },
-  });
+  const removeAccount = async (accountId: string) => {
+    try {
+      await api.delete(`/bank-accounts/${accountId}`);
+      setAccounts(prev => prev.filter(account => account.id !== accountId));
+    } catch (err) {
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'Failed to remove account';
+      setError(new Error(errorMessage));
+      throw err;
+    }
+  };
 
   return {
-    accounts: accountsQuery.data?.items ?? [],
-    isLoading: accountsQuery.isLoading,
-    isError: accountsQuery.isError,
-    error: accountsQuery.error,
-    addAccount: addAccountMutation.mutate,
-    removeAccount: removeAccountMutation.mutate,
-    updateAccount: updateAccountMutation.mutate,
-    isAddingAccount: addAccountMutation.isPending,
-    isRemovingAccount: removeAccountMutation.isPending,
-    isUpdatingAccount: updateAccountMutation.isPending,
+    accounts,
+    loading,
+    error,
+    isCreating,
+    createAccount,
+    removeAccount
   };
 }

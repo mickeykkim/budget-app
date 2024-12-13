@@ -1,4 +1,8 @@
-from datetime import datetime, timedelta
+"""
+API layer for Monzo Bank interaction
+"""
+
+from datetime import UTC, datetime, timedelta
 from typing import Any, Optional, cast
 from urllib.parse import urljoin
 
@@ -13,6 +17,8 @@ settings = get_settings()
 
 
 class MonzoAccount(TypedDict):
+    """Monzo account data"""
+
     id: str
     description: str
     created: str
@@ -20,6 +26,8 @@ class MonzoAccount(TypedDict):
 
 
 class MonzoTransaction(TypedDict):
+    """Monzo transaction data"""
+
     id: str
     amount: int
     created: str
@@ -28,6 +36,8 @@ class MonzoTransaction(TypedDict):
 
 
 class MonzoAPI(BankAPI):
+    """Monzo Bank API client"""
+
     def __init__(self) -> None:
         self.base_url = "https://api.monzo.com"
         self.client_id = settings.MONZO_CLIENT_ID
@@ -43,12 +53,12 @@ class MonzoAPI(BankAPI):
 
         try:
             response = requests.request(
-                method=method, url=url, headers=headers, **kwargs
+                method=method, url=url, headers=headers, timeout=30, **kwargs
             )
 
             if response.status_code == 401:
                 raise TokenRefreshError("Access token expired")
-            elif response.status_code != 200:
+            if response.status_code != 200:
                 raise HTTPException(
                     status_code=response.status_code,
                     detail=f"Monzo API error: {response.text}",
@@ -66,6 +76,7 @@ class MonzoAPI(BankAPI):
         try:
             response = requests.post(
                 f"{self.base_url}/oauth2/token",
+                timeout=30,
                 data={
                     "grant_type": "authorization_code",
                     "client_id": self.client_id,
@@ -82,7 +93,7 @@ class MonzoAPI(BankAPI):
             return TokenResponse(
                 access_token=data["access_token"],
                 refresh_token=data["refresh_token"],
-                expires_at=datetime.utcnow() + timedelta(seconds=data["expires_in"]),
+                expires_at=datetime.now(UTC) + timedelta(seconds=data["expires_in"]),
             )
         except requests.RequestException as e:
             raise TokenRefreshError(str(e)) from e
@@ -92,6 +103,7 @@ class MonzoAPI(BankAPI):
         try:
             response = requests.post(
                 f"{self.base_url}/oauth2/token",
+                timeout=30,
                 data={
                     "grant_type": "refresh_token",
                     "client_id": self.client_id,
@@ -107,12 +119,13 @@ class MonzoAPI(BankAPI):
             return TokenResponse(
                 access_token=data["access_token"],
                 refresh_token=data["refresh_token"],
-                expires_at=datetime.utcnow() + timedelta(seconds=data["expires_in"]),
+                expires_at=datetime.now(UTC) + timedelta(seconds=data["expires_in"]),
             )
         except requests.RequestException as e:
             raise TokenRefreshError(str(e)) from e
 
     def get_accounts(self, access_token: str) -> list[MonzoAccount]:
+        """Get Monzo accounts"""
         response = self._make_request("GET", "/accounts", access_token)
         return cast(list[MonzoAccount], response["accounts"])
 
@@ -123,6 +136,7 @@ class MonzoAPI(BankAPI):
         since: Optional[datetime] = None,
         limit: int = 100,
     ) -> list[MonzoTransaction]:
+        """Get Monzo transactions"""
         params = {"account_id": account_id, "limit": limit}
         if since:
             params["since"] = since.isoformat() + "Z"

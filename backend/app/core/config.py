@@ -1,3 +1,7 @@
+"""
+Config for app
+"""
+
 import os
 from functools import lru_cache
 from typing import Optional
@@ -6,6 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Config for app"""
     # API Settings
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Budget App"
@@ -18,7 +23,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     @property
-    def DATABASE_URL(self) -> str:
+    def DATABASE_URL(self) -> str:  # pylint: disable=invalid-name
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -41,6 +46,7 @@ class Settings(BaseSettings):
 
     # Environment-specific settings
     ENVIRONMENT: str = "development"
+    ENCRYPTION_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
@@ -48,7 +54,7 @@ class Settings(BaseSettings):
     def from_aws(cls) -> "Settings":
         """Load settings from AWS Parameter Store in production"""
         if os.getenv("ENVIRONMENT") == "production":
-            from .aws_config import AWSConfig
+            from app.core.aws_config import AWSConfig  # pylint: disable=cyclic-import
 
             aws_config = AWSConfig()
             params = aws_config.get_parameters()

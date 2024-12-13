@@ -1,67 +1,82 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '@/lib/api';
+import { User } from '@/types';
 
-// Types
 interface AuthContextType {
-  token: string | null;
-  user: any | null;
-  login: (token: string) => void;
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  isLoading: boolean;
 }
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  login: async () => {},
+  logout: () => {}
+});
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-// Create context
-const AuthContext = createContext<AuthContextType | null>(null);
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
 
-// Provider component
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [user, setUser] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      if (token) {
-        try {
-          const response = await axios.get('/api/v1/auth/me', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setUser(response.data);
-        } catch (error) {
-          console.error('Failed to fetch user:', error);
-          logout();
-        }
-      }
-      setIsLoading(false);
-    };
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      fetchUser();
+    }
+  }, []);
 
-    initializeAuth();
-  }, [token]);
+  const fetchUser = async () => {
+    try {
+      const userData = await api.get('/auth/me');
+      setUser(userData);
+      setIsAuthenticated(true);
+    } catch {
+      logout();
+    }
+  };
 
-  const login = (newToken: string) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
+  const login = async (email: string, password: string) => {
+    try {
+      const { access_token } = await api.login(email, password);
+      localStorage.setItem('access_token', access_token);
+      await fetchUser();
+    } catch (error) {
+      logout();
+      throw error;
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
+    localStorage.removeItem('access_token');
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook for using auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -69,25 +84,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Protected Route component
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { token, isLoading } = useAuth();
-  const location = useLocation();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    );
-  }
-
-  if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
-
-export default AuthContext;

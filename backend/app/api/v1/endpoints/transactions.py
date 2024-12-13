@@ -65,7 +65,7 @@ def get_transaction(
     return TransactionRead.model_validate(transaction)
 
 
-@router.put("/{transaction_id}", response_model=TransactionRead)
+@router.patch("/{transaction_id}", response_model=TransactionRead)
 def update_transaction(
     transaction_id: UUID,
     transaction_update: TransactionUpdate,
