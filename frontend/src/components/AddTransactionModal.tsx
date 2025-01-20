@@ -3,7 +3,6 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { useForm } from '@/hooks/useForm';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CreateTransactionData, BankAccount } from '@/types';
 
 interface AddTransactionModalProps {

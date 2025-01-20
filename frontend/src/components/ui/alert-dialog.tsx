@@ -1,5 +1,4 @@
 // src/components/ui/alert-dialog.tsx
-import React from 'react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { Button } from './button';
 
@@ -11,12 +10,12 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
 }
 
-export function ConfirmDialog({ 
-  open, 
-  onOpenChange, 
-  title, 
-  description, 
-  onConfirm 
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  onConfirm
 }: ConfirmDialogProps) {
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -29,12 +28,12 @@ export function ConfirmDialog({
           <AlertDialogPrimitive.Description className="text-sm text-gray-600 mb-4">
             {description}
           </AlertDialogPrimitive.Description>
-          
+
           <div className="flex justify-end space-x-2">
             <AlertDialogPrimitive.Cancel asChild>
               <Button variant="outline">Cancel</Button>
             </AlertDialogPrimitive.Cancel>
-            
+
             <AlertDialogPrimitive.Action asChild>
               <Button variant="destructive" onClick={onConfirm}>
                 Confirm

@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { useForm } from '@/hooks/useForm';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { CreateBankAccountData } from '@/types';
 
 interface AddAccountModalProps {
   isOpen: boolean;

@@ -1,11 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
-interface SettingsPageProps {
-  onSave?: (settings: any) => Promise<void>;
-}
-
-const SettingsPage: React.FC<SettingsPageProps> = ({ onSave }) => {
+const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Settings</h1>

@@ -24,6 +24,7 @@ dependencies = [
     "sqlalchemy-utils>=0.41.2",
     "pyjwt>=2.10.1",
     "cryptography>=44.0.0",
+    "python-json-logger>=2.0.7",
 ]
 requires-python = ">=3.12"
 
@@ -101,12 +102,12 @@ exclude = [
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
 module = [
-  "tests.*",
-  "boto3.*",
-  "botocore.exceptions.*",
-  "jose.*",
-  "passlib.context",
-  "sqlalchemy_utils.*"
+    "tests.*",
+    "boto3.*",
+    "botocore.exceptions.*",
+    "jose.*",
+    "passlib.context",
+    "sqlalchemy_utils.*"
 ]
 
 [tool.pytest.ini_options]

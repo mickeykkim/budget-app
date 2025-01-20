@@ -21,10 +21,6 @@ import { CreateTransactionData, Transaction, UpdateTransactionData } from '@/typ
 const TransactionsPage: React.FC = () => {
   const { accounts } = useBankAccounts();
   const [selectedAccountId, setSelectedAccountId] = useState<string | undefined>(undefined);
-  const [dateRange, setDateRange] = useState<{
-    startDate?: Date;
-    endDate?: Date
-  }>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -43,9 +39,7 @@ const TransactionsPage: React.FC = () => {
     isUpdating,
     isDeleting,
   } = useTransactions({
-    bankAccountId: selectedAccountId,
-    startDate: dateRange.startDate,
-    endDate: dateRange.endDate,
+    bank_account_id: selectedAccountId,
     limit: 50,
   });
 
@@ -147,9 +141,8 @@ const TransactionsPage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className={`font-medium ${
-                transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <span className={`font-medium ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
                 {formatCurrency(transaction.amount)}
               </span>
               <div className="flex items-center space-x-2">
@@ -170,8 +163,9 @@ const TransactionsPage: React.FC = () => {
                     setSelectedTransaction(transaction);
                     setShowDeleteConfirm(true);
                   }}
+                  disabled={isDeleting}
                 >
-                  Delete
+                  {isDeleting ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { AlertCircle, CheckCircle, MinusCircle } from 'lucide-react';
 
@@ -42,13 +42,13 @@ const LocalStackStatus = () => {
         if (!response.ok) {
           throw new Error('Failed to fetch LocalStack status');
         }
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
           throw new Error(data.error);
         }
-        
+
         // Filter only supported services and their status
         const serviceStatus = Object.entries(data.services)
           .filter(([service]) => SUPPORTED_SERVICES.includes(service))
@@ -56,7 +56,7 @@ const LocalStackStatus = () => {
             ...acc,
             [service]: status
           }), {});
-        
+
         setStatus(serviceStatus);
         setError(null);
       } catch (err) {
@@ -118,7 +118,7 @@ const LocalStackStatus = () => {
             const serviceStatus = status[service];
             const isAvailable = serviceStatus === 'available';
             const isDisabled = serviceStatus === 'disabled';
-            
+
             return (
               <div key={service} className="flex items-center space-x-2 p-2 rounded-md bg-gray-50">
                 {isAvailable ? (

@@ -1,29 +1,32 @@
 import { useState, useCallback } from 'react';
+import { ChangeEvent } from 'react';
 
 interface ValidationRules {
   [key: string]: (value: any) => string | null;
 }
 
 export function useForm<T extends Record<string, any>>(
-  initialValues: T, 
+  initialValues: T,
   validationRules: ValidationRules = {}
 ) {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = useCallback((
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const target = e.target;
+    const value = target.type === 'checkbox' && 'checked' in target ? target.checked : target.value;
     setValues(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [target.name]: value
     }));
 
-    // Clear error when user starts typing
-    if (errors[name as keyof T]) {
+    if (errors[target.name as keyof T]) {
       setErrors(prev => ({
         ...prev,
-        [name]: undefined
+        [target.name]: undefined
       }));
     }
   }, [errors]);
@@ -45,15 +48,15 @@ export function useForm<T extends Record<string, any>>(
 
   const handleSubmit = useCallback((
     submitHandler: (values: T) => Promise<void>,
-    options: { 
-      onSuccess?: () => void, 
-      onError?: (error: any) => void 
+    options: {
+      onSuccess?: () => void,
+      onError?: (error: any) => void
     } = {}
   ) => async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     setIsSubmitting(true);
-    
+
     try {
       if (validate()) {
         await submitHandler(values);
@@ -84,11 +87,11 @@ export function useForm<T extends Record<string, any>>(
 
 // Example validation rules
 export const validationRules = {
-  email: (value: string) => 
+  email: (value: string) =>
     !value ? 'Email is required' :
-    !/\S+@\S+\.\S+/.test(value) ? 'Email is invalid' : null,
-  
-  password: (value: string) => 
+      !/\S+@\S+\.\S+/.test(value) ? 'Email is invalid' : null,
+
+  password: (value: string) =>
     !value ? 'Password is required' :
-    value.length < 8 ? 'Password must be at least 8 characters' : null
+      value.length < 8 ? 'Password must be at least 8 characters' : null
 };

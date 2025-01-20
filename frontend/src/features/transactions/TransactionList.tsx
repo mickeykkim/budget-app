@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useFetch } from '@/hooks/useFetch';
 import { formatCurrency, formatDate } from '@/utils/formatting';
@@ -12,10 +11,10 @@ interface Transaction {
 }
 
 export default function TransactionList() {
-  const { 
-    data: transactions, 
-    loading, 
-    error 
+  const {
+    data: transactions,
+    loading,
+    error
   } = useFetch<{ items: Transaction[] }>('/transactions');
 
   if (loading) {
@@ -63,9 +62,8 @@ export default function TransactionList() {
                   {formatDate(transaction.created_at)}
                 </span>
               </div>
-              <span className={`font-medium ${
-                Number(transaction.amount) >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <span className={`font-medium ${Number(transaction.amount) >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
                 {formatCurrency(Number(transaction.amount))}
               </span>
             </div>

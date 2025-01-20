@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -61,33 +61,3 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 export default ErrorBoundary;
-
-// src/components/error/AsyncErrorBoundary.tsx
-import React, { Suspense } from 'react';
-import ErrorBoundary from './ErrorBoundary';
-
-interface AsyncErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-  loadingFallback?: React.ReactNode;
-}
-
-const DefaultLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-  </div>
-);
-
-const AsyncErrorBoundary: React.FC<AsyncErrorBoundaryProps> = ({
-  children,
-  fallback,
-  loadingFallback = <DefaultLoadingFallback />
-}) => {
-  return (
-    <ErrorBoundary fallback={fallback}>
-      <Suspense fallback={loadingFallback}>{children}</Suspense>
-    </ErrorBoundary>
-  );
-};
-
-export default AsyncErrorBoundary;

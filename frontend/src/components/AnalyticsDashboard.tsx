@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -17,17 +17,19 @@ import { formatCurrency } from '@/utils/formatting';
 import { AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const TIME_RANGES = [
+type TimeRange = '7d' | '30d' | 'this-month' | 'last-month' | 'this-year' | 'all';
+
+const TIME_RANGES: { label: string; value: TimeRange }[] = [
   { label: 'Last 7 Days', value: '7d' },
   { label: 'Last 30 Days', value: '30d' },
   { label: 'This Month', value: 'this-month' },
   { label: 'Last Month', value: 'last-month' },
   { label: 'This Year', value: 'this-year' },
-  { label: 'All Time', value: 'all' },
+  { label: 'All Time', value: 'all' }
 ];
 
 const AnalyticsDashboard = () => {
-  const [timeRange, setTimeRange] = useState('30d');
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
   // Calculate date range based on selected time range
   const dateRange = useMemo(() => {
@@ -54,8 +56,8 @@ const AnalyticsDashboard = () => {
         endDate: new Date()
       },
       'all': {
-        startDate: null,
-        endDate: null
+        startDate: undefined,
+        endDate: undefined
       }
     };
     return ranges[timeRange] || ranges['30d'];
@@ -69,7 +71,14 @@ const AnalyticsDashboard = () => {
   const monthlyData = useMemo(() => {
     if (!transactions) return [];
 
-    const monthlyTotals = transactions.reduce((acc, transaction) => {
+    interface MonthlyTotal {
+      month: string;
+      income: number;
+      expenses: number;
+      balance: number;
+    }
+
+    const monthlyTotals = transactions.reduce<Record<string, MonthlyTotal>>((acc, transaction) => {
       const date = new Date(transaction.created_at);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
@@ -129,7 +138,10 @@ const AnalyticsDashboard = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Select value={timeRange} onValueChange={setTimeRange}>
+        <Select
+          value={timeRange}
+          onValueChange={(value: string) => setTimeRange(value as TimeRange)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>

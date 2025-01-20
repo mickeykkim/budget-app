@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { AlertCircle } from 'lucide-react';
 import { AddAccountModal } from '@/components/AddAccountModal';
+import type { CreateBankAccountData } from '@/types';
 
 const AccountsPage: React.FC = () => {
   const { accounts, loading, error, removeAccount, createAccount, isCreating } = useBankAccounts();
@@ -31,11 +32,7 @@ const AccountsPage: React.FC = () => {
     }
   };
 
-  const handleCreateAccount = async (data: {
-    account_name: string;
-    account_type: string;
-    account_identifier: string;
-  }) => {
+  const handleCreateAccount = async (data: CreateBankAccountData) => {
     try {
       await createAccount(data);
       setIsAddModalOpen(false);
@@ -52,6 +49,15 @@ const AccountsPage: React.FC = () => {
     setDeleteError(null);
     setAddError(null);
   };
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Failed to load accounts: {error.message}</AlertDescription>
+      </Alert>
+    );
+  }
 
   if (loading) {
     return (

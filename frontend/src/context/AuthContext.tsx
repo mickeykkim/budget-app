@@ -13,8 +13,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  login: async () => {},
-  logout: () => {}
+  login: async () => { },
+  logout: () => { }
 });
 
 interface ProtectedRouteProps {
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUser = async () => {
     try {
-      const userData = await api.get('/auth/me');
+      const userData = await api.get<User>('/auth/me');
       setUser(userData);
       setIsAuthenticated(true);
     } catch {
