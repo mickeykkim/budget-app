@@ -1,0 +1,119 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=s3,lambda,apigateway,sqs,events,cloudwatch,cloudwatchevents,iam,ec2,rds
+      - AWS_DEFAULT_REGION=eu-west-2
+      - EDGE_PORT=4566
+      - PERSISTENCE=1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - EAGER_SERVICE_LOADING=1
+      - HOSTNAME_EXTERNAL=localstack
+      - HOSTNAME=localstack
+    volumes:
+      - "localstack_data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./localstack:/localstack"
+    networks:
+      - budget-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15
+    container_name: budget-app-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=budget_app_user
+      - POSTGRES_PASSWORD=development_password
+      - POSTGRES_DB=budget_app_local
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budget_app_user -d budget_app_local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - budget-network
+    command: ["postgres", "-c", "max_connections=200"]
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/backend
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_USER=budget_app_user
+      - POSTGRES_PASSWORD=development_password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=budget_app_local
+      - SECRET_KEY=your-secret-key-here
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=eu-west-2
+      - ENVIRONMENT=development
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+        - action: rebuild
+          path: ./pyproject.toml
+    networks:
+      - budget-network
+    depends_on:
+      localstack:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://backend:8000
+      - VITE_AWS_ENDPOINT=http://localhost:4566
+      - VITE_AWS_REGION=eu-west-2
+      - VITE_AWS_ACCESS_KEY_ID=test
+      - VITE_AWS_SECRET_ACCESS_KEY=test
+    command: npm run dev
+    networks:
+      - budget-network
+    depends_on:
+      - backend
+
+networks:
+  budget-network:
+    name: budget-network
+
+volumes:
+  postgres_data:
+    name: budget-app-postgres-data
+  localstack_data:
+    name: localstack_data

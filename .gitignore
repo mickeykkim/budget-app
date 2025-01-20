@@ -1,0 +1,21 @@
+/volume
+.DS_Store
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*.swn
+.vs/
+
+# GitHub files
+.github/
+*.log
+*.patch
+*.diff
+.git/
+.gitattributes
